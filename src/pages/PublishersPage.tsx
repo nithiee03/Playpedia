@@ -6,10 +6,10 @@ const API_KEY = 'b5af379bbd574c59ab5a04d9f10d1384';
 const API_BASE_URL = 'https://api.rawg.io/api';
 const PAGE_SIZE = 20; // Number of results per page
 
-// DevelopersPage component: fetches and displays game developers from RAWG API
-function DevelopersPage() {
-  // State variables for developers data, loading state, error messages, search query, pagination, and next page availability
-  const [developers, setDevelopers] = useState<any[]>([]); // List of developers
+// PublishersPage component: fetches and displays game publishers from RAWG API
+function PublishersPage() {
+  // State variables for publishers data, loading state, error messages, search query, pagination, and next page availability
+  const [publishers, setPublishers] = useState<any[]>([]); // List of publishers
   const [loading, setLoading] = useState(true); // Loading indicator
   const [error, setError] = useState<string | null>(null); // Error message
   const [searchQuery, setSearchQuery] = useState(''); // Search input value
@@ -19,22 +19,22 @@ function DevelopersPage() {
   // useNavigate hook from react-router-dom for navigation
   const navigate = useNavigate();
 
-  // Fetch developers from RAWG API when component mounts or when search/page changes
+  // Fetch publishers from RAWG API when component mounts or when search/page changes
   useEffect(() => {
     setLoading(true); // Start loading
     setError(null); // Reset error
     // Build the API URL with search and page filters
-    let url = `${API_BASE_URL}/developers?key=${API_KEY}&page_size=${PAGE_SIZE}&page=${page}`;
+    let url = `${API_BASE_URL}/publishers?key=${API_KEY}&page_size=${PAGE_SIZE}&page=${page}`;
     if (searchQuery) url += `&search=${encodeURIComponent(searchQuery)}`;
 
     // Fetch data from the API
     fetch(url)
       .then(res => {
-        if (!res.ok) throw new Error('Failed to fetch developers'); // Handle HTTP errors
+        if (!res.ok) throw new Error('Failed to fetch publishers'); // Handle HTTP errors
         return res.json(); // Parse JSON response
       })
       .then(data => {
-        setDevelopers(data.results || []); // Set developers data
+        setPublishers(data.results || []); // Set publishers data
         setHasNextPage(Boolean(data.next)); // Check if there is a next page
         setLoading(false); // Stop loading
       })
@@ -55,10 +55,8 @@ function DevelopersPage() {
       {/* Header section with app title and subtitle */}
       <header className="page-header">
         <div className="page-header-content">
-          <h1 className="page-title">PlayPedia</h1>
-          <div className="page-subtitle">
-            Discover, Explore, and Track Games Across All Platforms
-          </div>
+          <h1 className="page-title">Publishers</h1>
+          <div className="page-subtitle">Browse game publishers from RAWG</div>
         </div>
       </header>
 
@@ -70,12 +68,12 @@ function DevelopersPage() {
             ← Back to Games
           </button>
           {/* Section title */}
-          <h2 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '1.5rem' }}>Developers</h2>
-          {/* Search bar for filtering developers */}
+          <h2 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '1.5rem' }}>Publishers</h2>
+          {/* Search bar for filtering publishers */}
           <div className="search-bar-consistent">
             <input
               type="text"
-              placeholder="Search developers..."
+              placeholder="Search publishers..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
             />
@@ -94,50 +92,48 @@ function DevelopersPage() {
           {loading ? (
             <div className="loading-consistent">
               <div className="loading-spinner-consistent" />
-              <p>Loading developers...</p>
+              <p>Loading publishers...</p>
             </div>
           ) : error ? (
             // Show error message if fetch fails
             <div className="error-consistent">
-              <h2>Error Loading Developers</h2>
+              <h2>Error Loading Publishers</h2>
               <p>{error}</p>
             </div>
-          ) : developers.length === 0 ? (
-            // Show message if no developers found
+          ) : publishers.length === 0 ? (
+            // Show message if no publishers found
             <div className="empty-consistent">
-              <h3>No Developers Found</h3>
+              <h3>No Publishers Found</h3>
               <p>Try adjusting your search</p>
             </div>
           ) : (
             <>
-              {/* Grid of developer cards */}
+              {/* Grid of publisher cards */}
               <div className="card-grid">
-                {developers.map((developer) => (
-                  // Each card is clickable and navigates to the developer's detail page
+                {publishers.map((publisher) => (
+                  // Each card is clickable and navigates to the publisher's detail page
                   <div
-                    key={developer.id}
+                    key={publisher.id}
                     className="consistent-card fade-in"
-                    onClick={() => navigate(`/developer/${developer.id}`)}
+                    onClick={() => navigate(`/publisher/${publisher.id}`)}
                     style={{ cursor: 'pointer' }}
                   >
-                    {/* Developer image */}
-                    {developer.image_background && (
+                    {/* Publisher image */}
+                    {publisher.image_background && (
                       <img
-                        src={developer.image_background}
-                        alt={developer.name}
+                        src={publisher.image_background}
+                        alt={publisher.name}
                         className="consistent-card-image"
                         style={{ objectFit: 'cover', height: '180px', width: '100%' }}
                       />
                     )}
-                    {/* Developer info */}
+                    {/* Publisher info */}
                     <div className="consistent-card-content">
-                      <h3 className="consistent-card-title">{developer.name}</h3>
+                      <h3 className="consistent-card-title">{publisher.name}</h3>
                       <p className="consistent-card-meta">
-                        {/* Number of games by this developer */}
-                        {developer.games_count} games
+                        {/* Number of games by this publisher */}
+                        {publisher.games_count} games
                       </p>
-                      {/* Developer description (HTML from API) */}
-                      <div className="consistent-card-description" dangerouslySetInnerHTML={{ __html: developer.description }} />
                     </div>
                   </div>
                 ))}
@@ -168,4 +164,4 @@ function DevelopersPage() {
   );
 }
 
-export default DevelopersPage; 
+export default PublishersPage; 

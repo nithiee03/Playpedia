@@ -1,50 +1,52 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
+// RAWG API key and base URL for all requests
 const API_KEY = 'b5af379bbd574c59ab5a04d9f10d1384';
 const API_BASE_URL = 'https://api.rawg.io/api';
 
 // GameDetailPage: fetches and shows details for a specific game from the RAWG API
 function GameDetailPage() {
-  // 1. Get the id from the URL params
+  // Get the id from the URL params (e.g., /game/123)
   const { id } = useParams<{ id: string }>();
+  // useNavigate hook for navigation
   const navigate = useNavigate();
 
-  // 2. State for loading, error, the fetched game, and screenshots
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [game, setGame] = useState<any>(null);
-  const [screenshots, setScreenshots] = useState<any[]>([]);
-  const [trailers, setTrailers] = useState<any[]>([]); // For trailers
-  const [stores, setStores] = useState<any[]>([]); // For store links
-  const [achievements, setAchievements] = useState<any[]>([]); // For achievements
-  const [fadeIn, setFadeIn] = useState(false); // For fade-in animation
+  // State variables for loading, error, game data, screenshots, trailers, stores, achievements, and fade-in animation
+  const [loading, setLoading] = useState(true); // Loading indicator
+  const [error, setError] = useState<string | null>(null); // Error message
+  const [game, setGame] = useState<any>(null); // Game details
+  const [screenshots, setScreenshots] = useState<any[]>([]); // Screenshots
+  const [trailers, setTrailers] = useState<any[]>([]); // Trailers
+  const [stores, setStores] = useState<any[]>([]); // Store links
+  const [achievements, setAchievements] = useState<any[]>([]); // Achievements
+  const [fadeIn, setFadeIn] = useState(false); // Animation state
 
-  // 3. useEffect to fetch game details from the API
+  // Fetch game details and related data from the API when id changes
   useEffect(() => {
-    setLoading(true);
-    setError(null);
-    setFadeIn(false);
-    setGame(null);
-    setScreenshots([]);
-    setTrailers([]);
-    setStores([]);
-    setAchievements([]);
+    setLoading(true); // Start loading
+    setError(null); // Reset error
+    setFadeIn(false); // Reset animation
+    setGame(null); // Reset game
+    setScreenshots([]); // Reset screenshots
+    setTrailers([]); // Reset trailers
+    setStores([]); // Reset stores
+    setAchievements([]); // Reset achievements
     // Fetch game details
     fetch(`${API_BASE_URL}/games/${id}?key=${API_KEY}`)
       .then(res => {
-        if (!res.ok) throw new Error('Failed to fetch game details');
-        return res.json();
+        if (!res.ok) throw new Error('Failed to fetch game details'); // Handle HTTP errors
+        return res.json(); // Parse JSON response
       })
       .then(data => {
-        setGame(data);
+        setGame(data); // Set game data
         setStores(data.stores || []); // RAWG includes stores in game details
-        setLoading(false);
-        setTimeout(() => setFadeIn(true), 50);
+        setLoading(false); // Stop loading
+        setTimeout(() => setFadeIn(true), 50); // Trigger fade-in animation
       })
       .catch(err => {
-        setError(err.message);
-        setLoading(false);
+        setError(err.message); // Set error message
+        setLoading(false); // Stop loading
       });
     // Fetch screenshots
     fetch(`${API_BASE_URL}/games/${id}/screenshots?key=${API_KEY}`)
@@ -63,10 +65,8 @@ function GameDetailPage() {
       .catch(() => setAchievements([]));
   }, [id]);
 
-  // 4. Code flow: Component mounts or id changes -> loading=true -> fetch runs -> game and screenshots are set -> loading=false -> fadeIn animates -> UI updates
-
+  // Show loading spinner while fetching data
   if (loading) {
-    // 5. Show loading spinner
     return (
       <div className="page-container">
         <main className="page-main">
@@ -80,22 +80,15 @@ function GameDetailPage() {
       </div>
     );
   }
-
-  if (error || !game) {
-    // 6. Handle invalid ID or fetch error
+  // Show error message if fetch fails
+  if (error) {
     return (
       <div className="page-container">
         <main className="page-main">
           <div className="page-main-content">
             <div className="error-consistent">
-              <h2>Game not found</h2>
-              <p>{error || 'The game you are looking for does not exist.'}</p>
-              <button
-                onClick={() => navigate('/')}
-                className="btn-consistent btn-consistent-primary"
-              >
-                Back to Home
-              </button>
+              <h2>Error Loading Game</h2>
+              <p>{error}</p>
             </div>
           </div>
         </main>
@@ -103,23 +96,27 @@ function GameDetailPage() {
     );
   }
 
-  // 7. Show game details, screenshots gallery, and back button
+  // Render the game detail page
   return (
     <div className="page-container">
-      {/* Navigation */}
+      {/* Header section with app title and subtitle */}
+      <header className="page-header">
+        <div className="page-header-content">
+          <h1 className="page-title">PlayPedia</h1>
+          <div className="page-subtitle">
+            Discover, Explore, and Track Games Across All Platforms
+          </div>
+        </div>
+      </header>
+      {/* Navigation bar with back button */}
       <nav className="page-nav">
         <div className="page-nav-content">
-          <button
-            onClick={() => navigate('/')}
-            className="btn-consistent btn-consistent-secondary"
-          >
+          <button onClick={() => navigate('/')} className="btn-consistent btn-consistent-secondary">
             ← Back to Games
           </button>
-          <h2 style={{ margin: 0, color: 'var(--text-primary)' }}>{game.name}</h2>
         </div>
       </nav>
-
-      {/* Main content */}
+      {/* Main content area */}
       <main className="page-main">
         <div className="page-main-content">
           <div
@@ -129,8 +126,9 @@ function GameDetailPage() {
               transition: 'opacity 0.6s, transform 0.6s',
             }}
           >
-            {/* Game details */}
+            {/* Game details card */}
             <div className="consistent-card" style={{ marginBottom: '2rem' }}>
+              {/* Game cover image */}
               <img 
                 src={game.background_image} 
                 alt={game.name + ' cover'} 
@@ -142,6 +140,7 @@ function GameDetailPage() {
                   backgroundColor: '#f8f9fa'
                 }}
               />
+              {/* Game info */}
               <div className="consistent-card-content">
                 <h2 className="consistent-card-title" style={{ fontSize: '1.5rem' }}>{game.name}</h2>
                 <div className="consistent-card-meta">
@@ -150,6 +149,7 @@ function GameDetailPage() {
                   <p><strong>Rating:</strong> {game.rating}</p>
                   <p><strong>Released:</strong> {game.released}</p>
                 </div>
+                {/* Game description (HTML from API) */}
                 <div 
                   className="consistent-card-description"
                   style={{ marginTop: '1rem' }}
@@ -160,89 +160,65 @@ function GameDetailPage() {
 
             {/* Screenshots gallery */}
             {screenshots.length > 0 && (
-              <div style={{ marginTop: '2rem' }}>
-                <h3 style={{ marginBottom: '1rem', color: 'var(--text-primary)' }}>Screenshots</h3>
-                <div className="card-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
+              <div style={{ marginBottom: '2rem' }}>
+                <h3>Screenshots</h3>
+                <div style={{ display: 'flex', gap: '1rem', overflowX: 'auto' }}>
                   {screenshots.map((shot) => (
-                    <div key={shot.id} className="consistent-card">
-                      <img
-                        src={shot.image}
-                        alt={game.name + ' screenshot'}
-                        className="consistent-card-image"
-                      />
-                    </div>
+                    <img
+                      key={shot.id}
+                      src={shot.image}
+                      alt="Screenshot"
+                      style={{ width: '300px', borderRadius: '8px', objectFit: 'cover' }}
+                    />
                   ))}
                 </div>
               </div>
             )}
 
-            {/* Trailers (videos) */}
+            {/* Trailers gallery */}
             {trailers.length > 0 && (
-              <div style={{ marginTop: '2rem' }}>
-                <h3 style={{ marginBottom: '1rem', color: 'var(--text-primary)' }}>Trailers</h3>
-                <div className="card-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))' }}>
+              <div style={{ marginBottom: '2rem' }}>
+                <h3>Trailers</h3>
+                <div style={{ display: 'flex', gap: '1rem', overflowX: 'auto' }}>
                   {trailers.map((trailer) => (
-                    <div key={trailer.id} className="consistent-card">
-                      <video
-                        controls
-                        poster={trailer.preview}
-                        style={{ width: '100%', borderRadius: 'var(--border-radius)', background: '#000' }}
-                      >
-                        <source src={trailer.data.max} type="video/mp4" />
-                        Your browser does not support the video tag.
-                      </video>
-                      <div className="consistent-card-content">
-                        <h4 className="consistent-card-title">{trailer.name}</h4>
-                      </div>
-                    </div>
+                    <video
+                      key={trailer.id}
+                      src={trailer.data.max}
+                      controls
+                      style={{ width: '400px', borderRadius: '8px' }}
+                    />
                   ))}
                 </div>
               </div>
             )}
 
-            {/* Store links */}
+            {/* Stores section */}
             {stores.length > 0 && (
-              <div style={{ marginTop: '2rem' }}>
-                <h3 style={{ marginBottom: '1rem', color: 'var(--text-primary)' }}>Where to Buy</h3>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
+              <div style={{ marginBottom: '2rem' }}>
+                <h3>Available At</h3>
+                <ul style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', padding: 0, listStyle: 'none' }}>
                   {stores.map((store: any) => (
-                    <a
-                      key={store.id}
-                      href={`https://${store.store.domain}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="btn-consistent btn-consistent-secondary"
-                    >
-                      {store.store.name}
-                    </a>
+                    <li key={store.id}>
+                      <a href={`https://${store.store.domain}`} target="_blank" rel="noopener noreferrer" className="btn-consistent btn-consistent-secondary">
+                        {store.store.name}
+                      </a>
+                    </li>
                   ))}
-                </div>
+                </ul>
               </div>
             )}
 
-            {/* Achievements */}
+            {/* Achievements section */}
             {achievements.length > 0 && (
-              <div style={{ marginTop: '2rem' }}>
-                <h3 style={{ marginBottom: '1rem', color: 'var(--text-primary)' }}>Achievements</h3>
-                <div className="card-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))' }}>
-                  {achievements.map((ach: any) => (
-                    <div key={ach.id} className="consistent-card">
-                      <div className="consistent-card-content" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                        {ach.image && (
-                          <img 
-                            src={ach.image} 
-                            alt={ach.name} 
-                            style={{ width: 48, height: 48, borderRadius: '6px', objectFit: 'cover', background: '#eee' }} 
-                          />
-                        )}
-                        <div>
-                          <div className="consistent-card-title">{ach.name}</div>
-                          <div className="consistent-card-description">{ach.description}</div>
-                        </div>
-                      </div>
-                    </div>
+              <div style={{ marginBottom: '2rem' }}>
+                <h3>Achievements</h3>
+                <ul style={{ paddingLeft: '1.5rem' }}>
+                  {achievements.map((ach) => (
+                    <li key={ach.id} style={{ marginBottom: '0.5rem' }}>
+                      <strong>{ach.name}</strong>: {ach.description}
+                    </li>
                   ))}
-                </div>
+                </ul>
               </div>
             )}
           </div>

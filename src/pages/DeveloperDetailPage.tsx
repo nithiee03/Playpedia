@@ -2,72 +2,74 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import GameCard from '../components/GameCard';
 
+// RAWG API key and base URL for all requests
 const API_KEY = 'b5af379bbd574c59ab5a04d9f10d1384';
 const API_BASE_URL = 'https://api.rawg.io/api';
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 20; // Number of results per page
 
 // DeveloperDetailPage component: fetches and displays games for a specific developer
 function DeveloperDetailPage() {
-  // State for developer details, games, loading, error, search, and pagination
+  // Get the id from the URL params (e.g., /developer/123)
   const { id } = useParams<{ id: string }>();
+  // useNavigate hook for navigation
   const navigate = useNavigate();
-  const [developer, setDeveloper] = useState<any>(null);
-  const [games, setGames] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [page, setPage] = useState(1);
-  const [hasNextPage, setHasNextPage] = useState(false);
 
-  // Fetch developer details and games when component mounts or search/page changes
+  // State variables for developer details, games, loading, error, search, pagination, and next page availability
+  const [developer, setDeveloper] = useState<any>(null); // Developer details
+  const [games, setGames] = useState<any[]>([]); // List of games by this developer
+  const [loading, setLoading] = useState(true); // Loading indicator
+  const [error, setError] = useState<string | null>(null); // Error message
+  const [searchQuery, setSearchQuery] = useState(''); // Search input value
+  const [page, setPage] = useState(1); // Current page number
+  const [hasNextPage, setHasNextPage] = useState(false); // If there is a next page
+
+  // Fetch developer details and games from RAWG API when id, search, or page changes
   useEffect(() => {
-    setLoading(true);
-    setError(null);
-    
+    setLoading(true); // Start loading
+    setError(null); // Reset error
+    setDeveloper(null); // Reset developer
+    setGames([]); // Reset games
     // Fetch developer details
     fetch(`${API_BASE_URL}/developers/${id}?key=${API_KEY}`)
       .then(res => {
-        if (!res.ok) throw new Error('Failed to fetch developer details');
-        return res.json();
+        if (!res.ok) throw new Error('Failed to fetch developer details'); // Handle HTTP errors
+        return res.json(); // Parse JSON response
       })
       .then(data => {
-        setDeveloper(data);
+        setDeveloper(data); // Set developer data
       })
       .catch(err => {
-        setError(err.message);
-        setLoading(false);
+        setError(err.message); // Set error message
+        setLoading(false); // Stop loading
       });
-
     // Fetch games for this developer
     let url = `${API_BASE_URL}/games?key=${API_KEY}&developers=${id}&page_size=${PAGE_SIZE}&page=${page}`;
     if (searchQuery) url += `&search=${encodeURIComponent(searchQuery)}`;
-
     fetch(url)
       .then(res => {
-        if (!res.ok) throw new Error('Failed to fetch games');
-        return res.json();
+        if (!res.ok) throw new Error('Failed to fetch games'); // Handle HTTP errors
+        return res.json(); // Parse JSON response
       })
       .then(data => {
-        setGames(data.results || []);
-        setHasNextPage(Boolean(data.next));
-        setLoading(false);
+        setGames(data.results || []); // Set games data
+        setHasNextPage(Boolean(data.next)); // Check if there is a next page
+        setLoading(false); // Stop loading
       })
       .catch(err => {
-        setError(err.message);
-        setLoading(false);
+        setError(err.message); // Set error message
+        setLoading(false); // Stop loading
       });
-  }, [id, searchQuery, page]);
+  }, [id, searchQuery, page]); // Re-run effect when id, searchQuery, or page changes
 
-  // Reset to page 1 when search changes
+  // Reset to page 1 when search query changes
   useEffect(() => {
     setPage(1);
   }, [searchQuery]);
 
-  // Code flow: useEffect fetches developer and games -> state updates -> UI updates
-
+  // Render the page UI
   return (
     <div className="page-container">
-      {/* Header */}
+      {/* Header section with app title and subtitle */}
       <header className="page-header">
         <div className="page-header-content">
           <h1 className="page-title">PlayPedia</h1>
@@ -77,125 +79,99 @@ function DeveloperDetailPage() {
         </div>
       </header>
 
-      {/* Navigation */}
+      {/* Navigation bar with back button, section title, and search bar */}
       <nav className="page-nav">
         <div className="page-nav-content">
-          <div className="flex items-center gap-4" style={{ flexWrap: 'wrap' }}>
-            <button
-              onClick={() => navigate('/developers')}
-              className="btn-consistent btn-consistent-secondary"
-            >
-              ← Back to Developers
-            </button>
-            <div className="search-bar-consistent">
-              <input
-                type="text"
-                placeholder="Search games by this developer..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </div>
+          {/* Back to developers button */}
+          <button onClick={() => navigate('/developers')} className="btn-consistent btn-consistent-secondary">
+            ← Back to Developers
+          </button>
+          {/* Section title */}
+          <h2 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '1.5rem' }}>{developer ? `${developer.name} Games` : 'Developer Games'}</h2>
+          {/* Search bar for filtering games */}
+          <div className="search-bar-consistent">
+            <input
+              type="text"
+              placeholder="Search games by this developer..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+            />
+            {/* Search icon */}
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
           </div>
-          <h2 style={{ margin: 0, color: 'var(--text-primary)' }}>
-            {developer ? `${developer.name} Games` : 'Developer Games'}
-          </h2>
         </div>
       </nav>
 
-      {/* Main content */}
+      {/* Main content area */}
       <main className="page-main">
         <div className="page-main-content">
+          {/* Show loading spinner while fetching data */}
           {loading ? (
             <div className="loading-consistent">
               <div className="loading-spinner-consistent" />
-              <p>Loading developer details...</p>
+              <p>Loading games...</p>
             </div>
           ) : error ? (
+            // Show error message if fetch fails
             <div className="error-consistent">
-              <h2>Error Loading Developer</h2>
+              <h2>Error Loading Games</h2>
               <p>{error}</p>
             </div>
-          ) : !developer ? (
-            <div className="error-consistent">
-              <h2>Developer Not Found</h2>
-              <p>The developer you are looking for does not exist.</p>
+          ) : games.length === 0 ? (
+            // Show message if no games found
+            <div className="empty-consistent">
+              <h3>No Games Found</h3>
+              <p>Try adjusting your search</p>
             </div>
           ) : (
             <>
-              {/* Developer details */}
-              <div className="consistent-card" style={{ marginBottom: '2rem' }}>
-                {developer.image_background && (
-                  <img
-                    src={developer.image_background}
-                    alt={developer.name}
-                    className="consistent-card-image"
-                    style={{ height: '250px' }}
-                  />
-                )}
-                <div className="consistent-card-content">
-                  <h2 className="consistent-card-title" style={{ fontSize: '1.5rem' }}>{developer.name}</h2>
-                  <p className="consistent-card-meta">
-                    {developer.games_count} games by this developer
-                  </p>
-                  <div 
-                    className="consistent-card-description"
-                    dangerouslySetInnerHTML={{ __html: developer.description }}
-                  />
-                  {developer.year_started && (
-                    <p style={{ color: 'var(--text-secondary)', marginTop: '0.5rem', fontSize: '0.9rem' }}>
-                      Founded: {developer.year_started}
-                    </p>
-                  )}
-                </div>
+              {/* Grid of game cards */}
+              <div className="card-grid">
+                {games.map((game) => (
+                  // Each card is clickable and navigates to the game detail page
+                  <div
+                    key={game.id}
+                    className="consistent-card fade-in"
+                    onClick={() => navigate(`/game/${game.id}`)}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    {/* GameCard component displays game info */}
+                    <GameCard
+                      title={game.name}
+                      platform={game.parent_platforms?.map((p: any) => ({
+                        id: p.platform.id,
+                        name: p.platform.name,
+                        image: p.platform.image_background
+                      })) || []}
+                      image={game.background_image}
+                      rating={game.rating}
+                      releaseDate={game.released}
+                      genres={game.genres?.map((g: any) => g.name)}
+                      onClick={() => navigate(`/game/${game.id}`)}
+                    />
+                  </div>
+                ))}
               </div>
-
-              {/* Games grid */}
-              {games.length === 0 ? (
-                <div className="empty-consistent">
-                  <h3>No Games Found</h3>
-                  <p>Try adjusting your search</p>
-                </div>
-              ) : (
-                <>
-                  <div className="card-grid">
-                    {games.map((game, index) => (
-                      <div key={game.id} style={{ animationDelay: `${index * 0.1}s` }} className="fade-in">
-                        <GameCard
-                          title={game.name}
-                          platform={game.parent_platforms?.map((p: any) => p.platform.name).join(', ') || ''}
-                          image={game.background_image}
-                          rating={game.rating}
-                          releaseDate={game.released}
-                          genres={game.genres?.map((g: any) => g.name)}
-                          onClick={() => navigate(`/game/${game.id}`)}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                  
-                  {/* Pagination */}
-                  <div className="pagination-consistent">
-                    <button
-                      onClick={() => setPage(page - 1)}
-                      disabled={page === 1}
-                      className="btn-consistent btn-consistent-secondary"
-                    >
-                      Previous
-                    </button>
-                    <span>Page {page}</span>
-                    <button
-                      onClick={() => setPage(page + 1)}
-                      disabled={!hasNextPage}
-                      className="btn-consistent btn-consistent-secondary"
-                    >
-                      Next
-                    </button>
-                  </div>
-                </>
-              )}
+              {/* Pagination controls */}
+              <div className="pagination-consistent">
+                <button
+                  onClick={() => setPage(page - 1)}
+                  disabled={page === 1}
+                  className="btn-consistent btn-consistent-secondary"
+                >
+                  Previous
+                </button>
+                <span>Page {page}</span>
+                <button
+                  onClick={() => setPage(page + 1)}
+                  disabled={!hasNextPage}
+                  className="btn-consistent btn-consistent-secondary"
+                >
+                  Next
+                </button>
+              </div>
             </>
           )}
         </div>
